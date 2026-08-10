@@ -1,0 +1,19 @@
+[project]
+name = "payment-infra"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.19.1",
+    "asyncpg>=0.31.0",
+    "docker>=7.2.0",
+    "fastapi>=0.141.1",
+    "passlib[bcrypt]>=1.7.4",
+    "pydantic-settings>=2.15.0",
+    "python-dotenv>=1.2.2",
+    "python-jose[cryptography]>=3.5.0",
+    "sqlalchemy[asyncio]>=2.0.51",
+    "structlog>=26.1.0",
+    "uvicorn>=0.52.1",
+]
