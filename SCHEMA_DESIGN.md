@@ -1070,23 +1070,4 @@ raised → under_review → merchant_responded → resolved_merchant
 
 ---
 
-## Interview Talking Points
 
-**"Why double-entry ledger?"**
-A payments table tells you a payment happened. It doesn't prove where the money is. Double-entry proves every rupee that left one account arrived somewhere else. Sum of all debits must equal sum of all credits at all times. That's how you prove your books are correct — which is a regulatory requirement, not an engineering preference.
-
-**"Why bi-temporal on ledger_transactions?"**
-Two scenarios: a payment happens at 23:59:30 but bank confirmation arrives at 00:00:45 — single timestamp puts it in tomorrow's settlement, bi-temporal puts it in today's. And when a fee calculation error is corrected 3 months later — `effective_at` goes back to the original date so historical reports recalculate correctly, `recorded_at` stays as today so audit shows when the correction happened. Two views of truth simultaneously.
-
-**"Why outbox pattern?"**
-DB write and Kafka publish are two different systems. If DB commits and server crashes before Kafka publish — ledger says success, fraud service never scored it, settlement never picked it up. Outbox makes the Kafka publish a DB write inside the same transaction. Separate worker publishes. If worker crashes, row survives, gets published on restart. Atomicity without two-phase commit.
-
-**"Why separate status_history tables?"**
-`updated_at` on the main table only tells you the last change. A payment that went `initiated → processing → failed → processing → success` — the intermediate states, durations, and reasons are gone. In dispute resolution you need to prove the exact state sequence with timestamps. History tables preserve that permanently. They're also append-only — immutability is fundamental to financial auditability.
-
-**"Why token attenuation?"**
-In a multi-merchant platform, a merchant admin should not be able to grant their staff more permissions than the admin themselves has. `parent_token_id` self-reference on the tokens table records the entire lineage. Application enforces narrowing at issuance. DB records the tree. Cascade revocation via recursive CTE walks the tree and revokes every descendant in one query.
-
----
-
-*Schema design session completed. Application code, queries, indexes, and migrations live in separate documents.*
