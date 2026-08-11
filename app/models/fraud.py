@@ -1,4 +1,6 @@
 import uuid
+from datetime import datetime
+from decimal import Decimal
 from sqlalchemy import (
     DateTime,
     Numeric,
@@ -46,7 +48,7 @@ class FraudScore(Base):
         ForeignKey("customers.id"), nullable=False
     )
 
-    score: Mapped[Numeric] = mapped_column(Numeric(5, 2), nullable=False)
+    score: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     # 0.00 to 100.00. Above threshold = auto-hold.
 
     risk_level: Mapped[str] = mapped_column(String(10), nullable=False)
@@ -66,14 +68,14 @@ class FraudScore(Base):
     )
     review_decision: Mapped[str | None] = mapped_column(String(20), nullable=True)
     # 'approved', 'rejected', 'escalated'
-    reviewed_at: Mapped[DateTime | None] = mapped_column(
+    reviewed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
     model_version: Mapped[str] = mapped_column(String(20), nullable=False)
     # 'v1.0', 'v1.1' — scoring logic changes over time
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 

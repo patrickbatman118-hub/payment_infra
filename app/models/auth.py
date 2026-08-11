@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -29,10 +30,10 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="true"
     )
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
-    updated_at: Mapped[DateTime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 
@@ -102,7 +103,7 @@ class MerchantUser(Base):
         ForeignKey("users.id"), nullable=True
     )
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 
@@ -157,7 +158,7 @@ class Token(Base):
     is_revoked: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    revoked_at: Mapped[DateTime | None] = mapped_column(
+    revoked_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     revoked_by: Mapped[uuid.UUID | None] = mapped_column(
@@ -165,10 +166,10 @@ class Token(Base):
     )
     revocation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    expires_at: Mapped[DateTime] = mapped_column(
+    expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 

@@ -1,4 +1,6 @@
 import uuid
+from datetime import datetime
+from decimal import Decimal
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -36,20 +38,20 @@ class Settlement(Base):
     )
 
     # The window this settlement covers
-    period_start: Mapped[DateTime] = mapped_column(
+    period_start: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )
-    period_end: Mapped[DateTime] = mapped_column(
+    period_end: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )
 
     # Computed amounts — all Numeric(15,2), never float
-    gross_amount: Mapped[Numeric] = mapped_column(Numeric(15, 2), nullable=False)
-    fee_deducted: Mapped[Numeric] = mapped_column(Numeric(15, 2), nullable=False)
-    disputed_hold: Mapped[Numeric] = mapped_column(
+    gross_amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
+    fee_deducted: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
+    disputed_hold: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), nullable=False, server_default="0"
     )
-    net_payout: Mapped[Numeric] = mapped_column(Numeric(15, 2), nullable=False)
+    net_payout: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     currency: Mapped[str] = mapped_column(
         String(3), nullable=False, server_default="INR"
     )
@@ -64,7 +66,7 @@ class Settlement(Base):
         String(20), nullable=False, server_default="pending"
     )
     # 'pending', 'matched', 'mismatched', 'manual_review'
-    reconciliation_delta: Mapped[Numeric | None] = mapped_column(
+    reconciliation_delta: Mapped[Decimal | None] = mapped_column(
         Numeric(15, 2), nullable=True
     )
     # Difference between ledger sum and computed net_payout
@@ -72,7 +74,7 @@ class Settlement(Base):
 
     # Bank transfer tracking
     bank_reference: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    transferred_at: Mapped[DateTime | None] = mapped_column(
+    transferred_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
@@ -85,18 +87,18 @@ class Settlement(Base):
     attempt_count: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0"
     )
-    last_attempted_at: Mapped[DateTime | None] = mapped_column(
+    last_attempted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    next_retry_at: Mapped[DateTime | None] = mapped_column(
+    next_retry_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     failure_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
-    updated_at: Mapped[DateTime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 
@@ -150,9 +152,9 @@ class SettlementPayment(Base):
     payment_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("payments.id"), nullable=False
     )
-    amount: Mapped[Numeric] = mapped_column(Numeric(15, 2), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 
@@ -185,7 +187,7 @@ class SettlementStatusHistory(Base):
     triggered_by: Mapped[str] = mapped_column(String(20), nullable=False)
     # 'airflow', 'platform_admin', 'system'
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 

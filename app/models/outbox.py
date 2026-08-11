@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from sqlalchemy import (
     DateTime,
     Integer,
@@ -66,14 +67,14 @@ class OutboxEvent(Base):
     attempt_count: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0"
     )
-    last_attempted: Mapped[DateTime | None] = mapped_column(
+    last_attempted: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
-    published_at: Mapped[DateTime | None] = mapped_column(
+    published_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

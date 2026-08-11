@@ -1,4 +1,6 @@
 import uuid
+from datetime import datetime
+from decimal import Decimal
 from sqlalchemy import (
     DateTime,
     Numeric,
@@ -37,7 +39,7 @@ class Payment(Base):
         ForeignKey("customers.id"), nullable=False
     )
 
-    amount: Mapped[Numeric] = mapped_column(Numeric(15, 2), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     currency: Mapped[str] = mapped_column(
         String(3), nullable=False, server_default="INR"
     )
@@ -60,7 +62,7 @@ class Payment(Base):
 
     # Written by fraud service after scoring
     # Settlement ETL holds transactions above threshold
-    risk_score: Mapped[Numeric | None] = mapped_column(Numeric(5, 2), nullable=True)
+    risk_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
     risk_flags: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     # Bank/gateway tracking
@@ -70,20 +72,20 @@ class Payment(Base):
     gateway_response: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     # Store raw — you don't know which fields you'll need 6 months later in a dispute
 
-    initiated_at: Mapped[DateTime] = mapped_column(
+    initiated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
-    processed_at: Mapped[DateTime | None] = mapped_column(
+    processed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    expires_at: Mapped[DateTime | None] = mapped_column(
+    expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
-    updated_at: Mapped[DateTime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 
@@ -145,7 +147,7 @@ class PaymentStatusHistory(Base):
         "metadata", JSONB, nullable=True
     )
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
     # No updated_at. State transitions are facts. Facts don't get edited.

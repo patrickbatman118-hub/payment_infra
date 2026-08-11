@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from sqlalchemy import (
     DateTime,
     String,
@@ -61,7 +62,7 @@ class AuditLog(Base):
     policy_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Denials logged too — 50 denials in 5 minutes is a fraud pattern
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
     # No updated_at. Audit logs are immutable.

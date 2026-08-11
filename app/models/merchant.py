@@ -1,4 +1,6 @@
 import uuid
+from datetime import datetime
+from decimal import Decimal
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -36,7 +38,7 @@ class Merchant(Base):
         String(20), nullable=False, server_default="pending"
     )
     # 'pending', 'submitted', 'verified', 'rejected', 'suspended'
-    kyc_verified_at: Mapped[DateTime | None] = mapped_column(
+    kyc_verified_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
@@ -54,15 +56,15 @@ class Merchant(Base):
     # 'low', 'standard', 'high'
 
     # Per-merchant limits — not global config
-    max_transaction_amt: Mapped[Numeric] = mapped_column(
+    max_transaction_amt: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), nullable=False, server_default="100000.00"
     )
-    daily_limit: Mapped[Numeric] = mapped_column(
+    daily_limit: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), nullable=False, server_default="1000000.00"
     )
 
     # Per-merchant fee — enterprise merchants negotiate custom rates
-    fee_percentage: Mapped[Numeric] = mapped_column(
+    fee_percentage: Mapped[Decimal] = mapped_column(
         Numeric(5, 4), nullable=False, server_default="0.0200"
     )
     settlement_cycle: Mapped[int] = mapped_column(
@@ -70,10 +72,10 @@ class Merchant(Base):
     )
     # T+1 = next day, T+2 = two days
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
-    updated_at: Mapped[DateTime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 
@@ -131,7 +133,7 @@ class MerchantBankAccount(Base):
     is_verified: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
-    verified_at: Mapped[DateTime | None] = mapped_column(
+    verified_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     verification_method: Mapped[str | None] = mapped_column(
@@ -147,10 +149,10 @@ class MerchantBankAccount(Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="true"
     )
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
-    updated_at: Mapped[DateTime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 

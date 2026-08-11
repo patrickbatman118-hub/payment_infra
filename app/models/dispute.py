@@ -1,4 +1,6 @@
 import uuid
+from datetime import datetime
+from decimal import Decimal
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -45,8 +47,8 @@ class Dispute(Base):
     # 'product_unacceptable', 'credit_not_processed'
     reason_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    disputed_amount: Mapped[Numeric] = mapped_column(Numeric(15, 2), nullable=False)
-    resolved_amount: Mapped[Numeric | None] = mapped_column(Numeric(15, 2), nullable=True)
+    disputed_amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
+    resolved_amount: Mapped[Decimal | None] = mapped_column(Numeric(15, 2), nullable=True)
     # Separate columns — customer disputes ₹500, platform may resolve at ₹300.
     # Almost always different. One column can't express partial resolution.
 
@@ -62,15 +64,15 @@ class Dispute(Base):
     resolved_by: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     # platform_admin UUID who made the final call
 
-    raised_at: Mapped[DateTime] = mapped_column(
+    raised_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
-    respond_by: Mapped[DateTime] = mapped_column(
+    respond_by: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )
     # Deadline for merchant evidence. Scheduled job checks daily.
     # After deadline: auto-resolves in customer favor.
-    resolved_at: Mapped[DateTime | None] = mapped_column(
+    resolved_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
@@ -84,10 +86,10 @@ class Dispute(Base):
     )
     # Which future settlement deducted the disputed amount from merchant
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
-    updated_at: Mapped[DateTime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 
@@ -133,7 +135,7 @@ class DisputeStatusHistory(Base):
     # 'customer', 'merchant', 'platform_admin', 'system'
     actor_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 

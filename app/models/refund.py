@@ -1,4 +1,6 @@
 import uuid
+from datetime import datetime
+from decimal import Decimal
 from sqlalchemy import (
     DateTime,
     Numeric,
@@ -43,7 +45,7 @@ class Refund(Base):
         ForeignKey("users.id"), nullable=False
     )
 
-    refund_amount: Mapped[Numeric] = mapped_column(Numeric(15, 2), nullable=False)
+    refund_amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
 
     status: Mapped[str] = mapped_column(
         String(30), nullable=False, server_default="initiated"
@@ -63,13 +65,13 @@ class Refund(Base):
     gateway_refund_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     gateway_response: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
-    processed_at: Mapped[DateTime | None] = mapped_column(
+    processed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
-    updated_at: Mapped[DateTime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 
@@ -110,7 +112,7 @@ class RefundStatusHistory(Base):
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     triggered_by: Mapped[str] = mapped_column(String(20), nullable=False)
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 

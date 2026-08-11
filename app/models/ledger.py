@@ -1,4 +1,6 @@
 import uuid
+from datetime import datetime
+from decimal import Decimal
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
@@ -46,11 +48,11 @@ class LedgerTransaction(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Bi-temporal timestamps
-    effective_at: Mapped[DateTime] = mapped_column(
+    effective_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )
     # When the money movement economically happened (from bank confirmation)
-    recorded_at: Mapped[DateTime] = mapped_column(
+    recorded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
     # When this system wrote the row (always NOW())
@@ -60,7 +62,7 @@ class LedgerTransaction(Base):
         String(255), nullable=False, unique=True
     )
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
 
@@ -114,13 +116,13 @@ class LedgerEntry(Base):
 
     direction: Mapped[str] = mapped_column(String(10), nullable=False)
     # 'debit' or 'credit' — enforced by CHECK constraint above
-    amount: Mapped[Numeric] = mapped_column(Numeric(15, 2), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     # Enforced > 0 by CHECK constraint above
     currency: Mapped[str] = mapped_column(
         String(3), nullable=False, server_default="INR"
     )
 
-    running_balance: Mapped[Numeric] = mapped_column(Numeric(15, 2), nullable=False)
+    running_balance: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     # Balance snapshot at time of entry — enables point-in-time reconstruction
 
     # Reversal entries point back to what they're undoing
@@ -131,7 +133,7 @@ class LedgerEntry(Base):
         ForeignKey("ledger_entries.id"), nullable=True
     )
 
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
     # No updated_at. Ledger entries are permanent and immutable.
