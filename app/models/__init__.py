@@ -1,8 +1,3 @@
-# Import all models here so that:
-# 1. Alembic autogenerate sees every table in Base.metadata
-# 2. SQLAlchemy can resolve all cross-model relationship string references at mapper config time
-# Import order follows foreign key dependency graph (referenced tables before referencing tables)
-
 from app.models.merchant import Merchant, MerchantBankAccount  # noqa: F401
 from app.models.customer import Customer  # noqa: F401
 from app.models.auth import User, MerchantUser, Token  # noqa: F401

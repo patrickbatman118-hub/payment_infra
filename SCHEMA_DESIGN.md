@@ -992,7 +992,7 @@ Supporting systems
 ├── outbox_events              guaranteed Kafka delivery via DB atomicity
 └── audit_logs                 every system decision, immutable
 
-Total: 23 tables
+Total: 20 tables
 ```
 
 ---
@@ -1069,5 +1069,4 @@ raised → under_review → merchant_responded → resolved_merchant
 ```
 
 ---
-
 
