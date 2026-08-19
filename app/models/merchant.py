@@ -81,31 +81,31 @@ class Merchant(Base):
 
     # Relationships
     bank_accounts: Mapped[list["MerchantBankAccount"]] = relationship(
-        "MerchantBankAccount", back_populates="merchant", lazy="selectin"
+        "MerchantBankAccount", back_populates="merchant", lazy="noload"
     )
     customers: Mapped[list["Customer"]] = relationship(  # type: ignore[name-defined]
-        "Customer", back_populates="merchant", lazy="selectin"
+        "Customer", back_populates="merchant", lazy="noload"
     )
     merchant_users: Mapped[list["MerchantUser"]] = relationship(  # type: ignore[name-defined]
-        "MerchantUser", back_populates="merchant", lazy="selectin"
+        "MerchantUser", back_populates="merchant", lazy="noload"
     )
     tokens: Mapped[list["Token"]] = relationship(  # type: ignore[name-defined]
-        "Token", back_populates="merchant", lazy="selectin"
+        "Token", back_populates="merchant", lazy="noload"
     )
     payments: Mapped[list["Payment"]] = relationship(  # type: ignore[name-defined]
-        "Payment", back_populates="merchant", lazy="selectin"
+        "Payment", back_populates="merchant", lazy="noload"
     )
     settlements: Mapped[list["Settlement"]] = relationship(  # type: ignore[name-defined]
-        "Settlement", back_populates="merchant", lazy="selectin"
+        "Settlement", back_populates="merchant", lazy="noload"
     )
     disputes: Mapped[list["Dispute"]] = relationship(  # type: ignore[name-defined]
-        "Dispute", back_populates="merchant", lazy="selectin"
+        "Dispute", back_populates="merchant", lazy="noload"
     )
     refunds: Mapped[list["Refund"]] = relationship(  # type: ignore[name-defined]
-        "Refund", back_populates="merchant", lazy="selectin"
+        "Refund", back_populates="merchant", lazy="noload"
     )
     fraud_scores: Mapped[list["FraudScore"]] = relationship(  # type: ignore[name-defined]
-        "FraudScore", back_populates="merchant", lazy="selectin"
+        "FraudScore", back_populates="merchant", lazy="noload"
     )
 
 
@@ -158,8 +158,8 @@ class MerchantBankAccount(Base):
 
     # Relationships
     merchant: Mapped["Merchant"] = relationship(
-        "Merchant", back_populates="bank_accounts", lazy="selectin"
+        "Merchant", back_populates="bank_accounts", lazy="noload"
     )
     settlements: Mapped[list["Settlement"]] = relationship(  # type: ignore[name-defined]
-        "Settlement", back_populates="bank_account", lazy="selectin"
+        "Settlement", back_populates="bank_account", lazy="noload"
     )

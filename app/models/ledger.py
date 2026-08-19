@@ -68,16 +68,16 @@ class LedgerTransaction(Base):
 
     # Relationships
     payment: Mapped["Payment | None"] = relationship(  # type: ignore[name-defined]
-        "Payment", back_populates="ledger_transactions", lazy="selectin"
+        "Payment", back_populates="ledger_transactions", lazy="noload"
     )
     settlement: Mapped["Settlement | None"] = relationship(  # type: ignore[name-defined]
-        "Settlement", back_populates="ledger_transactions", lazy="selectin"
+        "Settlement", back_populates="ledger_transactions", lazy="noload"
     )
     entries: Mapped[list["LedgerEntry"]] = relationship(
-        "LedgerEntry", back_populates="ledger_transaction", lazy="selectin"
+        "LedgerEntry", back_populates="ledger_transaction", lazy="noload"
     )
     refunds: Mapped[list["Refund"]] = relationship(  # type: ignore[name-defined]
-        "Refund", back_populates="ledger_transaction", lazy="selectin"
+        "Refund", back_populates="ledger_transaction", lazy="noload"
     )
 
 
@@ -140,12 +140,12 @@ class LedgerEntry(Base):
 
     # Relationships
     ledger_transaction: Mapped["LedgerTransaction"] = relationship(
-        "LedgerTransaction", back_populates="entries", lazy="selectin"
+        "LedgerTransaction", back_populates="entries", lazy="noload"
     )
     # Self-referential reversal link
     reversed_entry: Mapped["LedgerEntry | None"] = relationship(
         "LedgerEntry",
         foreign_keys=[reversed_entry_id],
         remote_side="LedgerEntry.id",
-        lazy="selectin",
+        lazy="noload",
     )

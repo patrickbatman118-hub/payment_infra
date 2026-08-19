@@ -58,14 +58,14 @@ class Customer(Base):
 
     # Relationships
     merchant: Mapped["Merchant"] = relationship(  # type: ignore[name-defined]
-        "Merchant", back_populates="customers", lazy="selectin"
+        "Merchant", back_populates="customers", lazy="noload"
     )
     payments: Mapped[list["Payment"]] = relationship(  # type: ignore[name-defined]
-        "Payment", back_populates="customer", lazy="selectin"
+        "Payment", back_populates="customer", lazy="noload"
     )
     disputes: Mapped[list["Dispute"]] = relationship(  # type: ignore[name-defined]
-        "Dispute", back_populates="customer", lazy="selectin"
+        "Dispute", back_populates="customer", lazy="noload"
     )
     fraud_scores: Mapped[list["FraudScore"]] = relationship(  # type: ignore[name-defined]
-        "FraudScore", back_populates="customer", lazy="selectin"
+        "FraudScore", back_populates="customer", lazy="noload"
     )

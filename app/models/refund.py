@@ -77,19 +77,19 @@ class Refund(Base):
 
     # Relationships
     payment: Mapped["Payment"] = relationship(  # type: ignore[name-defined]
-        "Payment", back_populates="refunds", lazy="selectin"
+        "Payment", back_populates="refunds", lazy="noload"
     )
     merchant: Mapped["Merchant"] = relationship(  # type: ignore[name-defined]
-        "Merchant", back_populates="refunds", lazy="selectin"
+        "Merchant", back_populates="refunds", lazy="noload"
     )
     initiator: Mapped["User"] = relationship(  # type: ignore[name-defined]
-        "User", back_populates="refunds_initiated", lazy="selectin"
+        "User", back_populates="refunds_initiated", lazy="noload"
     )
     ledger_transaction: Mapped["LedgerTransaction | None"] = relationship(  # type: ignore[name-defined]
-        "LedgerTransaction", back_populates="refunds", lazy="selectin"
+        "LedgerTransaction", back_populates="refunds", lazy="noload"
     )
     status_history: Mapped[list["RefundStatusHistory"]] = relationship(
-        "RefundStatusHistory", back_populates="refund", lazy="selectin"
+        "RefundStatusHistory", back_populates="refund", lazy="noload"
     )
 
 
@@ -118,5 +118,5 @@ class RefundStatusHistory(Base):
 
     # Relationships
     refund: Mapped["Refund"] = relationship(
-        "Refund", back_populates="status_history", lazy="selectin"
+        "Refund", back_populates="status_history", lazy="noload"
     )

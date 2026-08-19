@@ -91,28 +91,28 @@ class Payment(Base):
 
     # Relationships
     merchant: Mapped["Merchant"] = relationship(  # type: ignore[name-defined]
-        "Merchant", back_populates="payments", lazy="selectin"
+        "Merchant", back_populates="payments", lazy="noload"
     )
     customer: Mapped["Customer"] = relationship(  # type: ignore[name-defined]
-        "Customer", back_populates="payments", lazy="selectin"
+        "Customer", back_populates="payments", lazy="noload"
     )
     status_history: Mapped[list["PaymentStatusHistory"]] = relationship(
-        "PaymentStatusHistory", back_populates="payment", lazy="selectin"
+        "PaymentStatusHistory", back_populates="payment", lazy="noload"
     )
     ledger_transactions: Mapped[list["LedgerTransaction"]] = relationship(  # type: ignore[name-defined]
-        "LedgerTransaction", back_populates="payment", lazy="selectin"
+        "LedgerTransaction", back_populates="payment", lazy="noload"
     )
     settlement_payment: Mapped["SettlementPayment | None"] = relationship(  # type: ignore[name-defined]
-        "SettlementPayment", back_populates="payment", lazy="selectin"
+        "SettlementPayment", back_populates="payment", lazy="noload"
     )
     disputes: Mapped[list["Dispute"]] = relationship(  # type: ignore[name-defined]
-        "Dispute", back_populates="payment", lazy="selectin"
+        "Dispute", back_populates="payment", lazy="noload"
     )
     refunds: Mapped[list["Refund"]] = relationship(  # type: ignore[name-defined]
-        "Refund", back_populates="payment", lazy="selectin"
+        "Refund", back_populates="payment", lazy="noload"
     )
     fraud_scores: Mapped[list["FraudScore"]] = relationship(  # type: ignore[name-defined]
-        "FraudScore", back_populates="payment", lazy="selectin"
+        "FraudScore", back_populates="payment", lazy="noload"
     )
 
 
@@ -154,5 +154,5 @@ class PaymentStatusHistory(Base):
 
     # Relationships
     payment: Mapped["Payment"] = relationship(
-        "Payment", back_populates="status_history", lazy="selectin"
+        "Payment", back_populates="status_history", lazy="noload"
     )

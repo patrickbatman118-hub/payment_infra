@@ -81,14 +81,14 @@ class FraudScore(Base):
 
     # Relationships
     payment: Mapped["Payment"] = relationship(  # type: ignore[name-defined]
-        "Payment", back_populates="fraud_scores", lazy="selectin"
+        "Payment", back_populates="fraud_scores", lazy="noload"
     )
     merchant: Mapped["Merchant"] = relationship(  # type: ignore[name-defined]
-        "Merchant", back_populates="fraud_scores", lazy="selectin"
+        "Merchant", back_populates="fraud_scores", lazy="noload"
     )
     customer: Mapped["Customer"] = relationship(  # type: ignore[name-defined]
-        "Customer", back_populates="fraud_scores", lazy="selectin"
+        "Customer", back_populates="fraud_scores", lazy="noload"
     )
     reviewer: Mapped["User | None"] = relationship(  # type: ignore[name-defined]
-        "User", back_populates="fraud_reviews", lazy="selectin"
+        "User", back_populates="fraud_reviews", lazy="noload"
     )

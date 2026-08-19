@@ -141,5 +141,5 @@ class DisputeStatusHistory(Base):
 
     # Relationships
     dispute: Mapped["Dispute"] = relationship(
-        "Dispute", back_populates="status_history", lazy="selectin"
+        "Dispute", back_populates="status_history", lazy="noload"
     )

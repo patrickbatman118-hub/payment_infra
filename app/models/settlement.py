@@ -104,26 +104,26 @@ class Settlement(Base):
 
     # Relationships
     merchant: Mapped["Merchant"] = relationship(  # type: ignore[name-defined]
-        "Merchant", back_populates="settlements", lazy="selectin"
+        "Merchant", back_populates="settlements", lazy="noload"
     )
     bank_account: Mapped["MerchantBankAccount | None"] = relationship(  # type: ignore[name-defined]
-        "MerchantBankAccount", back_populates="settlements", lazy="selectin"
+        "MerchantBankAccount", back_populates="settlements", lazy="noload"
     )
     settlement_payments: Mapped[list["SettlementPayment"]] = relationship(
-        "SettlementPayment", back_populates="settlement", lazy="selectin"
+        "SettlementPayment", back_populates="settlement", lazy="noload"
     )
     status_history: Mapped[list["SettlementStatusHistory"]] = relationship(
-        "SettlementStatusHistory", back_populates="settlement", lazy="selectin"
+        "SettlementStatusHistory", back_populates="settlement", lazy="noload"
     )
     ledger_transactions: Mapped[list["LedgerTransaction"]] = relationship(  # type: ignore[name-defined]
-        "LedgerTransaction", back_populates="settlement", lazy="selectin"
+        "LedgerTransaction", back_populates="settlement", lazy="noload"
     )
     # Disputes recovered via this settlement
     recovered_disputes: Mapped[list["Dispute"]] = relationship(  # type: ignore[name-defined]
         "Dispute",
         foreign_keys="Dispute.recovery_settlement_id",
         back_populates="recovery_settlement",
-        lazy="selectin",
+        lazy="noload",
     )
 
 
@@ -160,10 +160,10 @@ class SettlementPayment(Base):
 
     # Relationships
     settlement: Mapped["Settlement"] = relationship(
-        "Settlement", back_populates="settlement_payments", lazy="selectin"
+        "Settlement", back_populates="settlement_payments", lazy="noload"
     )
     payment: Mapped["Payment"] = relationship(  # type: ignore[name-defined]
-        "Payment", back_populates="settlement_payment", lazy="selectin"
+        "Payment", back_populates="settlement_payment", lazy="noload"
     )
 
 
@@ -193,5 +193,5 @@ class SettlementStatusHistory(Base):
 
     # Relationships
     settlement: Mapped["Settlement"] = relationship(
-        "Settlement", back_populates="status_history", lazy="selectin"
+        "Settlement", back_populates="status_history", lazy="noload"
     )

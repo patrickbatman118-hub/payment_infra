@@ -42,31 +42,31 @@ class User(Base):
         "MerchantUser",
         foreign_keys="MerchantUser.user_id",
         back_populates="user",
-        lazy="selectin",
+        lazy="noload",
     )
     invitations_sent: Mapped[list["MerchantUser"]] = relationship(
         "MerchantUser",
         foreign_keys="MerchantUser.invited_by",
         back_populates="inviter",
-        lazy="selectin",
+        lazy="noload",
     )
     tokens: Mapped[list["Token"]] = relationship(
         "Token",
         foreign_keys="Token.user_id",
         back_populates="user",
-        lazy="selectin",
+        lazy="noload",
     )
     tokens_revoked: Mapped[list["Token"]] = relationship(
         "Token",
         foreign_keys="Token.revoked_by",
         back_populates="revoker",
-        lazy="selectin",
+        lazy="noload",
     )
     refunds_initiated: Mapped[list["Refund"]] = relationship(  # type: ignore[name-defined]
-        "Refund", back_populates="initiator", lazy="selectin"
+        "Refund", back_populates="initiator", lazy="noload"
     )
     fraud_reviews: Mapped[list["FraudScore"]] = relationship(  # type: ignore[name-defined]
-        "FraudScore", back_populates="reviewer", lazy="selectin"
+        "FraudScore", back_populates="reviewer", lazy="noload"
     )
 
 
@@ -109,19 +109,19 @@ class MerchantUser(Base):
 
     # Relationships
     merchant: Mapped["Merchant"] = relationship(  # type: ignore[name-defined]
-        "Merchant", back_populates="merchant_users", lazy="selectin"
+        "Merchant", back_populates="merchant_users", lazy="noload"
     )
     user: Mapped["User"] = relationship(
         "User",
         foreign_keys=[user_id],
         back_populates="merchant_users",
-        lazy="selectin",
+        lazy="noload",
     )
     inviter: Mapped["User | None"] = relationship(
         "User",
         foreign_keys=[invited_by],
         back_populates="invitations_sent",
-        lazy="selectin",
+        lazy="noload",
     )
 
 
@@ -178,16 +178,16 @@ class Token(Base):
         "User",
         foreign_keys=[user_id],
         back_populates="tokens",
-        lazy="selectin",
+        lazy="noload",
     )
     merchant: Mapped["Merchant | None"] = relationship(  # type: ignore[name-defined]
-        "Merchant", back_populates="tokens", lazy="selectin"
+        "Merchant", back_populates="tokens", lazy="noload"
     )
     revoker: Mapped["User | None"] = relationship(
         "User",
         foreign_keys=[revoked_by],
         back_populates="tokens_revoked",
-        lazy="selectin",
+        lazy="noload",
     )
     # Self-referential attenuation tree
     parent_token: Mapped["Token | None"] = relationship(
@@ -195,11 +195,11 @@ class Token(Base):
         foreign_keys=[parent_token_id],
         back_populates="child_tokens",
         remote_side="Token.id",
-        lazy="selectin",
+        lazy="noload",
     )
     child_tokens: Mapped[list["Token"]] = relationship(
         "Token",
         foreign_keys=[parent_token_id],
         back_populates="parent_token",
-        lazy="selectin",
+        lazy="noload",
     )
