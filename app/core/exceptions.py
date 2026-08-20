@@ -74,3 +74,4 @@ async def payment_infra_exception_handler(request: Request, exc: PaymentInfraExc
         status_code=status_code,
         content={"Message": str(exc)}
     )
+

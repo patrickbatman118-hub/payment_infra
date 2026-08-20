@@ -39,6 +39,7 @@ async def get_payment(merchant_id: uuid.UUID, idempotency_key: uuid.UUID, db: As
 async def create_payment_with_history(payment, history, db: AsyncSession):
     db.add(payment)
     await db.flush()
+    history.payment_id = payment.id
     db.add(history)
     await db.commit()
     logger.info(f"Created payment {payment.id} with history {history.id}")
