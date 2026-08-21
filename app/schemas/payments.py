@@ -13,10 +13,11 @@ class PaymentInitiateRequest(BaseModel):
     payment_method_meta: dict | None = None
 
 class PaymentInitiateResponse(BaseModel):
-    payment_id: UUID
+    id: UUID = Field(alias='payment_id')
+    merchant_id: UUID
     status: str
     amount: Decimal
     created_at: datetime
 
-    class config:
+    class Config:
         from_attributes = True

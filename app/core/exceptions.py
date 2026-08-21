@@ -54,6 +54,11 @@ class DuplicatePayment(PaymentInfraException):
         self.payment_id = payment_id
         super().__init__(f"Duplicate payment {payment_id}")
 
+class InvalidPaymentStatus(PaymentInfraException):
+    def __init__(self, payment_id: UUID):
+        self.payment_id = payment_id
+        super().__init__(f'Invalid status for {payment_id}')
+
 
 async def payment_infra_exception_handler(request: Request, exc: PaymentInfraException):
     status_codes = {
@@ -65,7 +70,8 @@ async def payment_infra_exception_handler(request: Request, exc: PaymentInfraExc
         CustomerBlocked: 403,
         TransactionLimitExceeded: 422,
         PaymentNotFound: 404,
-        DuplicatePayment: 409
+        DuplicatePayment: 409,
+        InvalidPaymentStatus: 502
     }
     
     status_code = status_codes.get(type(exc), 500)
