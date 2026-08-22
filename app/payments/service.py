@@ -1,15 +1,25 @@
 from app.core.database import AsyncSession, get_db
+from app.core.config import settings
 from app.core.exceptions import MerchantNotFound, MerchantNotActive, KYCNotApproved, CustomerNotFound, CustomerBlocked, TransactionLimitExceeded, DuplicatePayment, PaymentNotFound, InvalidPaymentStatus
 from app.models.payment import Payment, PaymentStatusHistory
 from app.models.merchant import Merchant
 from app.models.customer import Customer
+from app.models.ledger import LedgerEntry
 from app.core.logging import logger
 from sqlalchemy import select
 import uuid, decimal
-from random import randint
+from datetime import datetime,timezone
+import random
 
-from app.payments.repository import get_merchant, get_customer, get_payment, create_payment_with_history, update_payment_status, create_payment_status_history
-
+from app.payments.repository import get_merchant, get_customer, get_payment, create_payment_with_history, update_payment_status, create_payment_status_history, get_last_running_balance, create_ledger_transaction, create_ledger_entry, create_outbox_event
+async def simulate_gateway_call(payment: Payment) -> dict:
+    success = random.choice([True, False])
+    return {
+        "status": "success" if success else "failed",
+        "gateway_payment_id": f"gw_{uuid.uuid4().hex[:16]}",
+        "confirmed_at": datetime.now(timezone.utc),
+        "raw_response": {"code": "00" if success else "51"}
+    }
 
 async def initiate_payment(db: AsyncSession, merchant_id: uuid.UUID, customer_id: uuid.UUID, amount: decimal.Decimal, payment_method: str, idempotency_key: str, payment_method_meta: dict | None = None, currency: str = "INR") -> Payment:
     merchant = await get_merchant(merchant_id, db)
@@ -46,9 +56,9 @@ async def initiate_payment(db: AsyncSession, merchant_id: uuid.UUID, customer_id
         triggered_by="customer",
         reason="Payment initiated"
     )
-    pay = await create_payment_with_history(payment, payment_history, db)
-    logger.info(f"Payment initiated with id {pay.id} for Merchant {merchant_id} and Customer {customer_id}")
-    return pay
+    payment = await create_payment_with_history(payment, payment_history, db)
+    logger.info(f"Payment initiated with id {payment.id} for Merchant {merchant_id} and Customer {customer_id}")
+    return payment
 
 async def process_payment(db: AsyncSession, payment_id: uuid.UUID):
     payment = await db.get(Payment, payment_id)
@@ -64,21 +74,75 @@ async def process_payment(db: AsyncSession, payment_id: uuid.UUID):
         raise InvalidPaymentStatus
     async with db.begin():
         await update_payment_status(payment, 'processing')
-        await create_payment_status_history(payment.id, 'initiated', 'processing', 'customer', 'payment', db)
-        await db.commit()
+        await create_payment_status_history(payment.id, 'initiated', 'processing', 'system', 'Payment processing started', db)
+        logger.info(f'payment {payment.id} status changed from initited to processing')
 
-    def gateway_call():
-        output = ['success','failure']
-        response = output[randint(0,1)]
-        return response
-    res = gateway_call()
+    response = await simulate_gateway_call(payment)
 
-    async with db.beign():
-        if res == 'success':
-            update_payment_status(payment, 'success')
-            create_payment_status_history(payment.id, 'processing', 'success', 'customer', 'payment', db)
+    payload = {
+    "payment_id": str(payment.id),
+    "merchant_id": str(payment.merchant_id),
+    "customer_id": str(payment.customer_id),
+    "amount": str(payment.amount),
+    "currency": payment.currency,
+    }
+
+    async with db.begin():
+        if response['status'] == 'success':
+            payment.gateway_payment_id = response['gateway_payment_id']
+            payment.gateway_response = response['raw_response']
+            payment.processed_at = datetime.now(timezone.utc)
+            await update_payment_status(payment, 'success', db)
+            await create_payment_status_history(payment.id, 'processing', 'success', 'system', 'Gateway confirmed payment', db)
             platform_fee = payment.amount * merchant.fee_percentage
             merchant_receives = payment.amount - platform_fee
+
+            customer_balance = await get_last_running_balance(db, payment.customer_id)
+            merchant_balance = await get_last_running_balance(db, payment.merchant_id)
+            platform_balance = await get_last_running_balance(db, settings.platform_account_id)
+
+            ledger_tx = await create_ledger_transaction(payment.id, 'payment', 'Gateway confirmed payment', response['confirmed_at'], payment.idempotency_key, db)
+
+            entries = [
+                LedgerEntry(
+                    ledger_transaction_id = ledger_tx.id,
+                    account_type = 'customer',
+                    account_id = payment.customer_id,
+                    direction = 'debit',
+                    amount = payment.amount,
+                    currency = payment.currency,
+                    running_balance = customer_balance - payment.amount
+                ),
+                LedgerEntry(
+                    ledger_transaction_id = ledger_tx.id,
+                    account_type = 'merchant',
+                    account_id = payment.merchant_id,
+                    direction = 'credit',
+                    amount = merchant_receives,
+                    currency = payment.currency,
+                    running_balance = merchant_balance + merchant_receives
+                ),
+                LedgerEntry(
+                    ledger_transaction_id = ledger_tx.id,
+                    account_type = 'platform',
+                    account_id = settings.platform_account_id,
+                    direction = 'credit',
+                    amount = platform_fee,
+                    currency = payment.currency,
+                    running_balance = platform_balance + platform_fee
+                )
+            ]
+            await create_ledger_entry(db, entries)
+            await create_outbox_event('payment.success', payload, 'payment', payment.id, db)
+            logger.info(f'payment succesful with id: {payment.id}')
+        else:
+            await update_payment_status(payment, 'failed')
+            await create_payment_status_history(payment.id, 'processing', 'failed', 'system', 'Gateway rejected payment', db)
+            await create_outbox_event('payment.failed', payload, 'payment', payment.id, db)
+            logger.info(f'payment failed with id: {payment.id}')
+    return payment
+
+
 
 
 

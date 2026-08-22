@@ -71,7 +71,6 @@ async def create_payment_status_history(payment_id: uuid.UUID, from_status: str,
 
 
 async def create_ledger_transaction(payment_id: uuid.UUID, entry_type: str, description: str, effective_date: datetime | None, idempotency_key: str, db: AsyncSession):
-    effective_date = effective_date or datetime.now(timezone.utc)
     ledger_transaction = LedgerTransaction(
         payment_id=payment_id,
         entry_type=entry_type,
@@ -95,6 +94,7 @@ async def create_outbox_event(topic: str, payload: dict, aggregate_type: str, ag
         aggregate_id=aggregate_id
     )
     db.add(outbox_event)
+    db.flush()
     logger.info(f"Created outbox event {outbox_event.id} for aggregate {aggregate_type} with ID {aggregate_id}")
 
 async def get_last_running_balance(db: AsyncSession, account_id: uuid.UUID) -> Decimal:
@@ -106,3 +106,6 @@ async def get_last_running_balance(db: AsyncSession, account_id: uuid.UUID) -> D
     )
     balance = result.scalar_one_or_none()
     return balance if balance is not None else Decimal("0.00")
+
+async def get_payment_with_id(db: AsyncSession, payment_id: uuid.UUID):
+    return await db.get(Payment,payment_id)

@@ -21,3 +21,16 @@ class PaymentInitiateResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PaymentProcessRequest(BaseModel):
+    payment_method_meta : dict | None = None
+
+class PayemntProcessResponse(BaseModel):
+    id: UUID
+    status: str
+    amount: Decimal
+    currency: str
+    processed_at: datetime
+
+    class Config:
+        from_attributes = True

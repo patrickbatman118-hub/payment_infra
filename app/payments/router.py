@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends,Body
 from app.core.database import AsyncSession, get_db
-from app.payments.service import initiate_payment
-from app.schemas.payments import PaymentInitiateRequest, PaymentInitiateResponse
+from app.payments.service import initiate_payment, process_payment
+from app.schemas.payments import PaymentInitiateRequest, PaymentInitiateResponse, PaymentProcessRequest, PayemntProcessResponse
+from app.payments.repository import get_payment_with_id
 from app.core.logging import logger
+import uuid
 
 router = APIRouter(tags=['Payments'])
 
@@ -19,3 +21,12 @@ async def initiate_payment_endpoint(request: PaymentInitiateRequest, db: AsyncSe
             currency=request.currency,
             db=db
         )
+
+@router.post('/payments/{payment_id}/process', response_model=PayemntProcessResponse)
+async def process_payment_request( payment_id: uuid.UUID,request:PaymentProcessRequest | None = Body(default=None) ,db: AsyncSession = Depends(get_db)):
+        logger.info(f'Processing payment for payment: {payment_id}')
+        return await process_payment(db, payment_id)
+
+@router.get('/payments/{payment_id}', response_model=PayemntProcessResponse)
+async def get_payment_details(payment_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+        return await get_payment_with_id(db, payment_id)
