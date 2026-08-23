@@ -2,7 +2,7 @@
 from uuid import UUID
 from fastapi import Request
 from fastapi.responses import JSONResponse
-
+from decimal import Decimal
 
 class PaymentInfraException(Exception):
     pass
@@ -44,10 +44,9 @@ class TransactionLimitExceeded(PaymentInfraException):
         super().__init__(f"Transaction amount {amount} exceeds limit for merchant {merchant_id}")
 
 class PaymentNotFound(PaymentInfraException):
-    def __init__(self, merchant_id: UUID, idempotency_key: UUID):
-        self.merchant_id = merchant_id
-        self.idempotency_key = idempotency_key
-        super().__init__(f"Payment with idempotency key {idempotency_key} not found for Merchant {merchant_id}")
+    def __init__(self, payment_id):
+        self.payment_id = payment_id
+        super().__init__(f"Payment with id {payment_id} not found")
 
 class DuplicatePayment(PaymentInfraException):
     def __init__(self, payment_id: UUID):
@@ -59,6 +58,12 @@ class InvalidPaymentStatus(PaymentInfraException):
         self.payment_id = payment_id
         super().__init__(f'Invalid status for {payment_id}')
 
+class LedgerImbalanceError(PaymentInfraException):
+    def __init__(self, payment_id: UUID, total_debits: Decimal, total_credits: Decimal):
+        self.payment_id = payment_id
+        self.total_debits = total_debits
+        self.total_credits = total_credits
+        super().__init__(f'Ledger Imbalance Detected, Payment:{payment_id}, Total_Debits: {total_debits}, Total_Credits: {total_credits}')
 
 async def payment_infra_exception_handler(request: Request, exc: PaymentInfraException):
     status_codes = {
@@ -71,7 +76,8 @@ async def payment_infra_exception_handler(request: Request, exc: PaymentInfraExc
         TransactionLimitExceeded: 422,
         PaymentNotFound: 404,
         DuplicatePayment: 409,
-        InvalidPaymentStatus: 502
+        InvalidPaymentStatus: 409,
+        LedgerImbalanceError: 500,
     }
     
     status_code = status_codes.get(type(exc), 500)

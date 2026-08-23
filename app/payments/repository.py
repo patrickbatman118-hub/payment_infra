@@ -33,10 +33,6 @@ async def get_customer(customer_id: uuid.UUID, merchant_id: uuid.UUID, db: Async
 async def get_payment(merchant_id: uuid.UUID, idempotency_key: uuid.UUID, db: AsyncSession) -> Payment | None:
     result = await db.execute(select(Payment).where(Payment.merchant_id == merchant_id, Payment.idempotency_key == idempotency_key))
     payment = result.scalar_one_or_none()
-    if not payment:
-        logger.warning(
-            f"Payment with idempotency key {idempotency_key} not found for Merchant {merchant_id}")
-        raise PaymentNotFound(merchant_id, idempotency_key)
     return payment
 
 
@@ -84,7 +80,7 @@ async def create_ledger_transaction(payment_id: uuid.UUID, entry_type: str, desc
 
 async def create_ledger_entry(db: AsyncSession, ledger_entries: list[LedgerEntry]):
     db.add_all(ledger_entries)
-    logger.info(f"Created ledger entries for payment {ledger_entries[0].transaction_id} with {len(ledger_entries)} entries")
+    logger.info(f"Created ledger entries for payment {ledger_entries[0].ledger_transaction_id} with {len(ledger_entries)} entries")
 
 async def create_outbox_event(topic: str, payload: dict, aggregate_type: str, aggregate_id: uuid.UUID, db: AsyncSession):
     outbox_event = OutboxEvent(
@@ -94,7 +90,7 @@ async def create_outbox_event(topic: str, payload: dict, aggregate_type: str, ag
         aggregate_id=aggregate_id
     )
     db.add(outbox_event)
-    db.flush()
+    await db.flush()
     logger.info(f"Created outbox event {outbox_event.id} for aggregate {aggregate_type} with ID {aggregate_id}")
 
 async def get_last_running_balance(db: AsyncSession, account_id: uuid.UUID) -> Decimal:
@@ -103,6 +99,7 @@ async def get_last_running_balance(db: AsyncSession, account_id: uuid.UUID) -> D
         .where(LedgerEntry.account_id == account_id)
         .order_by(LedgerEntry.created_at.desc())
         .limit(1)
+        .with_for_update()
     )
     balance = result.scalar_one_or_none()
     return balance if balance is not None else Decimal("0.00")

@@ -1,6 +1,6 @@
 from app.core.database import AsyncSession, get_db
 from app.core.config import settings
-from app.core.exceptions import MerchantNotFound, MerchantNotActive, KYCNotApproved, CustomerNotFound, CustomerBlocked, TransactionLimitExceeded, DuplicatePayment, PaymentNotFound, InvalidPaymentStatus
+from app.core.exceptions import MerchantNotFound, MerchantNotActive, KYCNotApproved, CustomerNotFound, CustomerBlocked, TransactionLimitExceeded, DuplicatePayment, PaymentNotFound, InvalidPaymentStatus, LedgerImbalanceError
 from app.models.payment import Payment, PaymentStatusHistory
 from app.models.merchant import Merchant
 from app.models.customer import Customer
@@ -68,10 +68,10 @@ async def process_payment(db: AsyncSession, payment_id: uuid.UUID):
     merchant = await get_merchant(payment.merchant_id,db)
     if not merchant:
         logger.warning(f'Merchant {payment.merchant_id} not found')
-        raise MerchantNotFound
+        raise MerchantNotFound(payment.merchant_id)
     if payment.status != 'initiated':
         logger.warning(f'Payment is already {payment.status}')
-        raise InvalidPaymentStatus
+        raise InvalidPaymentStatus(payment.id)
     async with db.begin():
         await update_payment_status(payment, 'processing')
         await create_payment_status_history(payment.id, 'initiated', 'processing', 'system', 'Payment processing started', db)
@@ -92,8 +92,10 @@ async def process_payment(db: AsyncSession, payment_id: uuid.UUID):
             payment.gateway_payment_id = response['gateway_payment_id']
             payment.gateway_response = response['raw_response']
             payment.processed_at = datetime.now(timezone.utc)
+
             await update_payment_status(payment, 'success', db)
             await create_payment_status_history(payment.id, 'processing', 'success', 'system', 'Gateway confirmed payment', db)
+
             platform_fee = payment.amount * merchant.fee_percentage
             merchant_receives = payment.amount - platform_fee
 
@@ -102,6 +104,12 @@ async def process_payment(db: AsyncSession, payment_id: uuid.UUID):
             platform_balance = await get_last_running_balance(db, settings.platform_account_id)
 
             ledger_tx = await create_ledger_transaction(payment.id, 'payment', 'Gateway confirmed payment', response['confirmed_at'], payment.idempotency_key, db)
+            total_debits = payment.amount
+            total_credits = merchant_receives + platform_fee
+
+            if total_debits != total_credits:
+                logger.error("Ledger imbalance detected", extra={"payment_id": str(payment.id),"total_debits": str(total_debits),"total_credits": str(total_credits)})
+                raise LedgerImbalanceError(payment.id, total_debits, total_credits)
 
             entries = [
                 LedgerEntry(
