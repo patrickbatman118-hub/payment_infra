@@ -1,4 +1,4 @@
-from app.core.database import AsyncSession, get_db
+from app.core.database import AsyncSession
 from app.core.exceptions import CustomerNotFound, MerchantNotFound, PaymentNotFound
 from app.models.payment import Payment, PaymentStatusHistory
 from app.models.merchant import Merchant
@@ -46,7 +46,7 @@ async def create_payment_with_history(payment, history, db: AsyncSession):
     return payment
 
 
-async def update_payment_status(payment: Payment, new_status: str, db: AsyncSession):
+async def update_payment_status(payment: Payment, new_status: str):
     if not payment:
         logger.warning(f"Payment {payment.id} not found for status update")
         raise PaymentNotFound(payment.id)
@@ -66,7 +66,7 @@ async def create_payment_status_history(payment_id: uuid.UUID, from_status: str,
     logger.info(f"Created payment status history {history.id} for payment {payment_id}")
 
 
-async def create_ledger_transaction(payment_id: uuid.UUID, entry_type: str, description: str, effective_date: datetime | None, idempotency_key: str, db: AsyncSession):
+async def create_ledger_transaction(payment_id: uuid.UUID, entry_type: str, description: str, effective_date: datetime, idempotency_key: str, db: AsyncSession):
     ledger_transaction = LedgerTransaction(
         payment_id=payment_id,
         entry_type=entry_type,
@@ -97,7 +97,7 @@ async def get_last_running_balance(db: AsyncSession, account_id: uuid.UUID) -> D
     result = await db.execute(
         select(LedgerEntry.running_balance)
         .where(LedgerEntry.account_id == account_id)
-        .order_by(LedgerEntry.created_at.desc())
+        .order_by(LedgerEntry.entry_sequence.desc())
         .limit(1)
         .with_for_update()
     )

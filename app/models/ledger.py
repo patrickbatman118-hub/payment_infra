@@ -5,6 +5,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     DateTime,
+    Integer,
     Numeric,
     String,
     Text,
@@ -135,6 +136,10 @@ class LedgerEntry(Base):
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("NOW()")
+    )
+
+    entry_sequence: Mapped[int] = mapped_column(
+        Integer,nullable=False, autoincrement=True
     )
     # No updated_at. Ledger entries are permanent and immutable.
 

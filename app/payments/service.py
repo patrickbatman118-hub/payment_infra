@@ -93,7 +93,7 @@ async def process_payment(db: AsyncSession, payment_id: uuid.UUID):
             payment.gateway_response = response['raw_response']
             payment.processed_at = datetime.now(timezone.utc)
 
-            await update_payment_status(payment, 'success', db)
+            await update_payment_status(payment, 'success')
             await create_payment_status_history(payment.id, 'processing', 'success', 'system', 'Gateway confirmed payment', db)
 
             platform_fee = payment.amount * merchant.fee_percentage
