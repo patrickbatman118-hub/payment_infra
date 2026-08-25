@@ -30,7 +30,7 @@ async def get_customer(customer_id: uuid.UUID, merchant_id: uuid.UUID, db: Async
     return customer
 
 
-async def get_payment(merchant_id: uuid.UUID, idempotency_key: uuid.UUID, db: AsyncSession) -> Payment | None:
+async def get_payment(merchant_id: uuid.UUID, idempotency_key: str, db: AsyncSession) -> Payment | None:
     result = await db.execute(select(Payment).where(Payment.merchant_id == merchant_id, Payment.idempotency_key == idempotency_key))
     payment = result.scalar_one_or_none()
     return payment

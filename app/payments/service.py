@@ -1,12 +1,9 @@
-from app.core.database import AsyncSession, get_db
+from app.core.database import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import MerchantNotFound, MerchantNotActive, KYCNotApproved, CustomerNotFound, CustomerBlocked, TransactionLimitExceeded, DuplicatePayment, PaymentNotFound, InvalidPaymentStatus, LedgerImbalanceError
 from app.models.payment import Payment, PaymentStatusHistory
-from app.models.merchant import Merchant
-from app.models.customer import Customer
 from app.models.ledger import LedgerEntry
 from app.core.logging import logger
-from sqlalchemy import select
 import uuid, decimal
 from datetime import datetime,timezone
 import random
@@ -23,6 +20,9 @@ async def simulate_gateway_call(payment: Payment) -> dict:
 
 async def initiate_payment(db: AsyncSession, merchant_id: uuid.UUID, customer_id: uuid.UUID, amount: decimal.Decimal, payment_method: str, idempotency_key: str, payment_method_meta: dict | None = None, currency: str = "INR") -> Payment:
     merchant = await get_merchant(merchant_id, db)
+    if not merchant:
+        logger.warning(f'Merchant {merchant_id} not found')
+        raise MerchantNotFound(merchant_id)
     if merchant.status != "active":
         logger.warning(f"Merchant {merchant_id} is not active")
         raise MerchantNotActive(merchant_id)
@@ -75,7 +75,7 @@ async def process_payment(db: AsyncSession, payment_id: uuid.UUID):
     async with db.begin():
         await update_payment_status(payment, 'processing')
         await create_payment_status_history(payment.id, 'initiated', 'processing', 'system', 'Payment processing started', db)
-        logger.info(f'payment {payment.id} status changed from initited to processing')
+        logger.info(f'payment {payment.id} status changed from initiated to processing')
 
     response = await simulate_gateway_call(payment)
 
@@ -142,7 +142,7 @@ async def process_payment(db: AsyncSession, payment_id: uuid.UUID):
             ]
             await create_ledger_entry(db, entries)
             await create_outbox_event('payment.success', payload, 'payment', payment.id, db)
-            logger.info(f'payment succesful with id: {payment.id}')
+            logger.info(f'payment successful with id: {payment.id}')
         else:
             await update_payment_status(payment, 'failed')
             await create_payment_status_history(payment.id, 'processing', 'failed', 'system', 'Gateway rejected payment', db)

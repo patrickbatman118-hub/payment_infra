@@ -46,7 +46,7 @@ class CustomerBlocked(PaymentInfraException):
 
 class TransactionLimitExceeded(PaymentInfraException):
     status_code: int = 422
-    def __init__(self, merchant_id: UUID, amount: float):
+    def __init__(self, merchant_id: UUID, amount: Decimal):
         self.merchant_id = merchant_id
         self.amount = amount
         super().__init__(f"Transaction amount {amount} exceeds limit for merchant {merchant_id}")
@@ -59,9 +59,9 @@ class PaymentNotFound(PaymentInfraException):
 
 class DuplicatePayment(PaymentInfraException):
     status_code: int = 409
-    def __init__(self, payment_id: UUID):
-        self.payment_id = payment_id
-        super().__init__(f"Duplicate payment {payment_id}")
+    def __init__(self, idempotency_key: str):
+        self.idempotency_key = idempotency_key
+        super().__init__(f"Duplicate payment {idempotency_key}")
 
 class InvalidPaymentStatus(PaymentInfraException):
     status_code: int = 409
@@ -83,5 +83,33 @@ async def payment_infra_exception_handler(request: Request, exc: PaymentInfraExc
     return JSONResponse(
         status_code=exc.status_code,
         content={"Message": str(exc)}
+    )
+
+class AuthException(Exception):
+    status_code = 401
+    pass
+
+class UserEmailAlreadyExists(AuthException):
+    status_code = 409
+    def __init__(self, email: str):
+        self.email = email
+        super().__init__(f'User with email {email} already exists')
+
+class UserNotFound(AuthException):
+    status_code = 404
+    def __init__(self, email: str):
+        self.email = email
+        super().__init__(f'User with email {email} not found')
+
+class InvalidCredentials(AuthException):
+    status_code = 401
+    def __init__(self, email: str):
+        self.email = email
+        super().__init__(f'Invalid credentials for {email}')
+
+async def auth_exception_handler(request: Request, exc: AuthException):
+    return JSONResponse(
+    status_code = exc.status_code,
+    content={'Message': str(exc)}
     )
 

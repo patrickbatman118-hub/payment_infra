@@ -151,7 +151,7 @@ class Token(Base):
     # NULL = root token
 
     # What this token can do — scoped per token, not just per role
-    scopes: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    scopes: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
     # e.g. ['payments:read', 'refunds:write', 'settlements:read']
 
     # Revocation
