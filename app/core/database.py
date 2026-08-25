@@ -1,10 +1,8 @@
 from typing import Any, AsyncGenerator
-
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import settings
-
 
 engine = create_async_engine(
     settings.database_url,
@@ -24,6 +22,6 @@ class Base(DeclarativeBase):
     pass
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, Any]: # pyright: ignore[reportInvalidTypeForm]
+async def get_db() -> AsyncGenerator[AsyncSession]:  # pyright: ignore[reportInvalidTypeForm]
     async with AsyncSessionFactory() as session:
         yield session
