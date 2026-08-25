@@ -77,11 +77,11 @@ class LedgerImbalanceError(PaymentInfraException):
         self.total_credits = total_credits
         super().__init__(f'Ledger Imbalance Detected, Payment:{payment_id}, Total_Debits: {total_debits}, Total_Credits: {total_credits}')
 
-async def payment_infra_exception_handler(request: Request, exc: PaymentInfraException):
+async def payment_infra_exception_handler(request: Request, exc: Exception):
 
     
     return JSONResponse(
-        status_code=exc.status_code,
+        status_code= getattr(exc, 'status_code', 500),
         content={"Message": str(exc)}
     )
 
@@ -99,17 +99,17 @@ class UserNotFound(AuthException):
     status_code = 404
     def __init__(self, email: str):
         self.email = email
-        super().__init__(f'User with email {email} not found')
+        super().__init__(f'User with not found')
 
 class InvalidCredentials(AuthException):
     status_code = 401
     def __init__(self, email: str):
         self.email = email
-        super().__init__(f'Invalid credentials for {email}')
+        super().__init__(f'Invalid credentials')
 
-async def auth_exception_handler(request: Request, exc: AuthException):
+async def auth_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
-    status_code = exc.status_code,
+    status_code = getattr(exc, 'status_code', 401),
     content={'Message': str(exc)}
     )
 

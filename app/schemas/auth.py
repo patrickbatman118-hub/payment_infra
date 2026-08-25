@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr, model_validator, ValidationError
+from pydantic import BaseModel, Field, EmailStr, model_validator
 
 
 class RegisterRequest(BaseModel):
@@ -11,7 +11,7 @@ class RegisterRequest(BaseModel):
     @model_validator(mode='after')
     def check_pass(self):
         if self.password != self.confirm_password:
-            raise ValidationError('Passwords do not match')
+            raise ValueError('Passwords do not match')
         return self
 
 class LoginRequest(BaseModel):
@@ -20,7 +20,7 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     access_token: str
-    token_type: str
+    token_type: str = 'bearer'
 
     class Config:
         from_attributes = True

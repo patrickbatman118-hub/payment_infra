@@ -10,12 +10,18 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
 
-def create_access_token(user_id: uuid.UUID, jti: str, scopes: list[str], merchant_id: uuid.UUID | None) -> str:
+
+class Token:
+    def __init__(self, token_type: str, access_token: str):
+        self.token_type = token_type
+        self.access_token = access_token
+
+def create_access_token(user_id: uuid.UUID, jti: str, scopes: list[str], merchant_id: uuid.UUID | None):
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
-    to_encode = dict(user_id=user_id, jti=jti, scopes=scopes, merchant_id=merchant_id, exp=expire, type='access',
+    to_encode = dict(user_id=str(user_id), jti=jti, scopes=scopes, merchant_id=str(merchant_id), exp=expire, type='access',
                      iat=datetime.now(timezone.utc))
     encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
-    return encoded_jwt
+    return Token(token_type='bearer', access_token=encoded_jwt)
 
 def decode_access_token(token: str):
     try:
@@ -25,3 +31,4 @@ def decode_access_token(token: str):
         raise
     except JWTError:
         raise
+
