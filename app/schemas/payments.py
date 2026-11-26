@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
+from typing import Any
+
 
 class PaymentInitiateRequest(BaseModel):
     merchant_id: UUID
@@ -10,7 +12,8 @@ class PaymentInitiateRequest(BaseModel):
     currency: str = Field(default='INR')
     payment_method: str
     idempotency_key: str
-    payment_method_meta: dict | None = None
+    payment_method_meta: dict[str, Any] | None = None
+
 
 class PaymentInitiateResponse(BaseModel):
     id: UUID = Field(alias='payment_id')
@@ -22,10 +25,12 @@ class PaymentInitiateResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class PaymentProcessRequest(BaseModel):
-    payment_method_meta : dict | None = None
 
-class PayemntProcessResponse(BaseModel):
+class PaymentProcessRequest(BaseModel):
+    payment_method_meta: dict[str, Any] | None = None
+
+
+class PaymentProcessResponse(BaseModel):
     id: UUID
     status: str
     amount: Decimal

@@ -68,7 +68,7 @@ class TransactionLimitExceeded(PaymentInfraException):
 class PaymentNotFound(PaymentInfraException):
     status_code: int = 404
 
-    def __init__(self, payment_id):
+    def __init__(self, payment_id: UUID):
         self.payment_id = payment_id
         super().__init__(f"Payment with id {payment_id} not found")
 
@@ -100,7 +100,7 @@ class LedgerImbalanceError(PaymentInfraException):
             f'Ledger Imbalance Detected, Payment:{payment_id}, Total_Debits: {total_debits}, Total_Credits: {total_credits}')
 
 
-async def payment_infra_exception_handler(request: Request, exc: Exception):
+async def payment_infra_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     return JSONResponse(
         status_code=getattr(exc, 'status_code', 500),
         content={"Message": str(exc)}
@@ -133,6 +133,10 @@ class InvalidCredentials(AuthException):
 class TokenNotFound(AuthException):
     status_code = 404
     detail = 'Token not found'
+
+class TokenAlreadyExpired(AuthException):
+    status_code = 409
+    detail = 'Token already expired'
 
 
 async def auth_exception_handler(request: Request, exc: Exception) -> JSONResponse:

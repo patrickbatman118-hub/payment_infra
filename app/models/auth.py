@@ -7,6 +7,7 @@ from sqlalchemy import (
     Text,
     ForeignKey,
     UniqueConstraint,
+    Index
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -127,6 +128,8 @@ class MerchantUser(Base):
 
 class Token(Base):
     __tablename__ = "tokens"
+
+    __table_args__ = (Index('Idx_Parent_tkn', 'parent_token_id'))
 
     id: Mapped[uuid.UUID] = mapped_column(
         primary_key=True,

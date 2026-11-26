@@ -2,8 +2,9 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import logger
-from app.auth.repository import get_user_by_email, create_token_record, create_user
-from app.core.exceptions import UserEmailAlreadyExists, UserNotFound, InvalidCredentials
+from app.auth.repository import get_user_by_email, create_token_record, create_user, get_token_by_jti, revoke_token_tree
+from app.core.exceptions import UserEmailAlreadyExists, UserNotFound, InvalidCredentials, TokenNotFound, \
+    TokenAlreadyExpired
 from app.auth.utils import hash_password, create_access_token, verify_password
 from app.models.auth import User, Token
 from app.core.config import settings
@@ -47,3 +48,16 @@ async def login(db: AsyncSession, email: str, password: str):
     jwt = create_access_token(user.id, jti, token.scopes, token.merchant_id)
     logger.info(f'jwt created for user with email {email}, jti: {jti}')
     return jwt
+
+
+async def revoke_token(db: AsyncSession, jti: str, revoked_by: uuid.UUID, reason: str) -> int:
+    token = await get_token_by_jti(jti, db)
+    if not token:
+        logger.warning(f"Token with jti {jti} does not exist")
+        raise TokenNotFound(jti)
+    if token.is_revoked:
+        logger.warning(f"Token with jti {jti} already revoked")
+        raise TokenAlreadyExpired(jti)
+    revoked_tkns = await revoke_token_tree(token.id, revoked_by, reason, db)
+    logger.info(f'revoked {revoked_tkns} tokens with jti {jti}')
+    return revoked_tkns
